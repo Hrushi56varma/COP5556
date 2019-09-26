@@ -400,6 +400,7 @@ public class Scanner {
 							throw new LexicalException("Invalid tokens found");
 						}
 			}
+						break;
 						
 		    if (r.read() == -1) { return new Token(EOF,"eof",0,0);}
 			throw new LexicalException("Useful error message");

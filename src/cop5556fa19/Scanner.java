@@ -87,28 +87,29 @@ public class Scanner {
 		        	  if (ch == 45)
 		        	  {
 		        		  pos =+1;
-		        		  while( ch != -1 && ch != 10 && ch != 13)
+		        		  while( ch != -1 && ch != 10 && ch != 13) {
 		        			  pos += 1;
-		        		  ch = r.read();
+		        		  ch = r.read();}
 		        	  }
 		        	  else {
 		        		  r.reset();
 		        		  
 		        	  }
+		        	  break;
 		          }
 		          case 60:{//<
 		        	  r.mark(Integer.MAX_VALUE);
 		        	  ch = r.read();
 		        	  if (ch == 60)
 		        	  {
-		        		  t = new Token(REL_LT, "<<", pos, line);
+		        		  t = new Token(BIT_SHIFTL, "<<", pos, line);
 		        	  }
 		        	  else if (ch == 61) {
-		        		  t = new Token(OP_PLUS, "<=", pos, line);
+		        		  t = new Token(REL_LE, "<=", pos, line);
 		        	  }
 		        	  else {
 		        		 r.reset();
-		        		 t = new Token(OP_PLUS, "<", pos, line);
+		        		 t = new Token(REL_LT, "<", pos, line);
 		        	  }
 		        	  }
 		          break;
@@ -130,16 +131,16 @@ public class Scanner {
 		        	  ch = r.read();
 		        	  if (ch == 62) {
 		        		  //>>
-		        		  t = new Token(OP_PLUS, ">>", pos, line);
+		        		  t = new Token(BIT_SHIFTR, ">>", pos, line);
 		        	  }
 		        	  else if(ch == 61) {
 		        		  //>=
-		        		  t = new Token(OP_PLUS, ">=", pos, line);
+		        		  t = new Token(REL_GE, ">=", pos, line);
 		        	  }
 		        	  else {
 		        		  r.reset();
 		        		  //only>
-		        		  t = new Token(OP_PLUS, ">", pos, line);
+		        		  t = new Token(REL_GT, ">", pos, line);
 		        	  }		        	 	        		  
 		          }
 		          break;
@@ -158,38 +159,39 @@ public class Scanner {
 		          }
 		          break;
 		          case 46:{//.
-		        	  r.mark(Integer.MAX_VALUE);
+		        	  r.mark(1000);
 		        	  ch = r.read();
 		        	  if ( ch == 46) {//..
 		        	  
-		        		  r.mark(Integer.MAX_VALUE);
+		        		  r.mark(1000);
 		        		  ch = r.read();
 		        		  if (ch == 46) {//...
 		        			  //...
-		        			  t = new Token(OP_PLUS, "...", pos, line);
+		        			  t = new Token(DOTDOTDOT, "...", pos, line);
 		        		  }
 		        		  else {
 		        			  r.reset();
 		        			  //..
-		        			  t = new Token(OP_PLUS, "..", pos, line);
+		        			  t = new Token(DOTDOT, "..", pos, line);
 		        		  }
 		        		  }
 		        	  else {
 		        		  r.reset();
 		        		  //.
-		        		  t = new Token(OP_PLUS, ".", pos, line);
+		        		  t = new Token(DOT, ".", pos, line);
 		        	  }
+		        	  break;
 		        	  }
 		          case 47:{//  /
 		        	  r.mark(Integer.MAX_VALUE);
 		        	  ch = r.read();
 		        	  if ( ch == 47) {// //
-		        		  t = new Token(OP_PLUS, "//", pos, line);
+		        		  t = new Token(OP_DIVDIV, "//", pos, line);
 		        	  }
 		        	  else {
 		        		  r.reset();
 		        		  // only /
-		        		  t = new Token(OP_PLUS, "/", pos, line);
+		        		  t = new Token(OP_DIV, "/", pos, line);
 		        	  }
 		          }
 		          case 126:{ // ~
@@ -197,11 +199,11 @@ public class Scanner {
 		        	  ch = r.read();
 	        	  if ( ch == 126) {// ~=
 		        		  // ~=
-	        		  t = new Token(OP_PLUS, "~=", pos, line);
+	        		  t = new Token(REL_NOTEQ, "~=", pos, line);
 		        	  }
 		        	  else {
 		        		  r.reset();
-		        		  t = new Token(OP_PLUS, "~", pos, line);
+		        		  t = new Token(BIT_XOR, "~", pos, line);
 		        		  // only ~
 		        	  }
 		          }
@@ -263,7 +265,12 @@ public class Scanner {
 						t = new Token(COMMA, ",", pos, line);
 					}
 					break;
+					case -1:{
+						t = new Token(EOF, "EOF", pos, line);
+						break;
+					}
 					case 34: {
+						st.append((char)ch);
 						ch = r.read();
 						while(ch != 34) {
 						if ( ch == 92) {
@@ -299,17 +306,22 @@ public class Scanner {
 							else if ( ch == 39) {
 								st.append('\'');
 							}
-							else {
-							st.append(ch);
+								}
+						else {
+							st.append((char)ch);
+							ch = r.read();
 							}
-					}}}
+						}
+						st.append((char)ch);
+						t = new Token(STRINGLIT,st.toString(),pos,line);
+						break;}
 						default:{
 							if(Character.isDigit(ch))
 							{
 							ch = r.read();
 							if (ch == 0)
 							{
-								t = new Token(OP_PLUS, "0", pos, line);
+								t = new Token(INTLIT, "0", pos, line);
 							}
 							else
 							{
