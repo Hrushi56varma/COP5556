@@ -636,7 +636,10 @@ class ScannerTest {
 		assertEquals(t.text,"...");
 		show(t= s.getNext());
 		assertEquals(t.kind,NAME);
-		assertEquals(t.text,"def;");
+		assertEquals(t.text,"def");
+		show(t= s.getNext());
+		assertEquals(t.kind,SEMI);
+		assertEquals(t.text,";");
 		show(t= s.getNext());
 		assertEquals(t.kind,NAME);
 		assertEquals(t.text,"a");
@@ -698,12 +701,12 @@ class ScannerTest {
 	@Test
 	void test42() throws Exception{
 
-		Reader r = new StringReader("abc\\n");
+		Reader r = new StringReader("if\\n");
 		Scanner s = new Scanner(r);
 		Token t;
 		show(t=s.getNext());
-        assertEquals(t.kind,NAME);
-		assertEquals(t.text,"abc");
+        assertEquals(t.kind,KW_if);
+		assertEquals(t.text,"if");
 		show(t=s.getNext());
         assertEquals(t.kind,EOF);
 		assertEquals(t.text,"EOF");
@@ -720,6 +723,68 @@ class ScannerTest {
 		show(t=s.getNext());
         assertEquals(t.kind,NAME);
 		assertEquals(t.text,"def");
+	}
+	@Test
+	void testadd() throws Exception{
+		Reader r = new StringReader("1 + 2");
+		Scanner s = new Scanner(r);
+		Token t;
+		show(t= s.getNext());
+		assertEquals(t.kind,INTLIT);
+		assertEquals(t.text,"1");
+		show(t= s.getNext());
+		assertEquals(t.kind,OP_PLUS);
+		assertEquals(t.text,"+");
+		show(t= s.getNext());
+		assertEquals(t.kind,INTLIT);
+		assertEquals(t.text,"2");
+	}
+	@Test
+	void testunary1() throws Exception{
+		Reader r = new StringReader("-*2\n");
+		Scanner s = new Scanner(r);
+		Token t;
+		show(t= s.getNext());
+		assertEquals(t.kind,OP_MINUS);
+		assertEquals(t.text,"-");
+		show(t= s.getNext());
+		assertEquals(t.kind,OP_TIMES);
+		assertEquals(t.text,"*");
+		show(t= s.getNext());
+		assertEquals(t.kind,INTLIT);
+		assertEquals(t.text,"2");
+		show(t=s.getNext());
+        assertEquals(t.kind,EOF);
+		assertEquals(t.text,"EOF");
+	}
+	
+	@Test
+	void testfunc() throws Exception{
+		Reader r = new StringReader("function(1, 2) end");
+		Scanner s = new Scanner(r);
+		Token t;
+		show(t= s.getNext());
+		assertEquals(t.kind,KW_function);
+		assertEquals(t.text,"function");
+		show(t= s.getNext());
+		assertEquals(t.kind,LPAREN);
+		assertEquals(t.text,"(");
+		show(t= s.getNext());
+		assertEquals(t.kind,INTLIT);
+		assertEquals(t.text,"1");
+		show(t=s.getNext());
+        assertEquals(t.kind,COMMA);
+		assertEquals(t.text,",");
+		show(t=s.getNext());
+        assertEquals(t.kind,INTLIT);
+		assertEquals(t.text,"2");
+		show(t=s.getNext());
+        assertEquals(t.kind,RPAREN);
+		assertEquals(t.text,")");
+		show(t=s.getNext());
+        assertEquals(t.kind,KW_end);
+		assertEquals(t.text,"end");
+		
 	}
 	
 	//@Test

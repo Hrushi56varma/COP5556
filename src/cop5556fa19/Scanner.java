@@ -52,9 +52,14 @@ public class Scanner {
 			case start:{
 				pos += 1;
 		          switch (ch) {
-		          case 32: {   
+		          case 32: {  
+		        	  r.mark(Integer.MAX_VALUE);
 						ch = r.read();
+						if(ch != 32) {
+							r.reset();
+						}
 					}
+		          
 					break;
 					case 9: {
 						pos += 3;
@@ -93,6 +98,7 @@ public class Scanner {
 		        	  }
 		        	  else {
 		        		  r.reset();
+		        		  t = new Token(OP_MINUS, "-", pos, line);	
 		        		  
 		        	  }
 		        	  break;
@@ -163,7 +169,7 @@ public class Scanner {
 		        	  ch = r.read();
 		        	  if ( ch == 46) {//..
 		        	  
-		        		  r.mark(1000);
+		        		  r.mark(1);
 		        		  ch = r.read();
 		        		  if (ch == 46) {//...
 		        			  //...
@@ -193,11 +199,11 @@ public class Scanner {
 		        		  // only /
 		        		  t = new Token(OP_DIV, "/", pos, line);
 		        	  }
-		          }
+		          }break;
 		          case 126:{ // ~
 		        	  r.mark(Integer.MAX_VALUE);
 		        	  ch = r.read();
-	        	  if ( ch == 126) {// ~=
+	        	  if ( ch == 61) {// ~=
 		        		  // ~=
 	        		  t = new Token(REL_NOTEQ, "~=", pos, line);
 		        	  }
@@ -205,7 +211,7 @@ public class Scanner {
 		        		  r.reset();
 		        		  t = new Token(BIT_XOR, "~", pos, line);
 		        		  // only ~
-		        	  }
+		        	  }break;
 		          }
 		        		  
 		          case 43: {
@@ -253,6 +259,10 @@ public class Scanner {
 						t = new Token(LSQUARE, "[", pos, line);	
 					}
 					break;
+					case 37:{
+						t = new Token(OP_MOD, "%", pos, line);	
+					}
+					break;
 					case 93: {
 						t = new Token(RSQUARE, "]", pos, line);	
 					}
@@ -269,6 +279,45 @@ public class Scanner {
 						t = new Token(EOF, "EOF", pos, line);
 						break;
 					}
+					case 92:{
+						if (ch == 'a') {
+							st.append("\u0007");
+						}
+						
+						else if (ch == 'b') {
+							st.append("\u0008");
+						}
+						
+						else if ( ch == 'f') {
+							st.append("\u0012");
+						}
+						else if ( ch == 'n') {
+							st.append("\u00010");
+						}
+						else if ( ch == 'r') {
+							st.append("\u00013");
+						}
+						else if ( ch == 't') {
+							st.append("\u0009");
+						}
+						else if ( ch == 'v') {
+							st.append("\u0011");
+						}
+						else if ( ch == 92) {
+							st.append("\\");
+						}
+						else if ( ch == '"') {
+							st.append('"');
+						}
+						else if ( ch == 39) {
+							st.append('\'');
+						}
+						else {
+							st.append((char)ch);
+							ch = r.read();
+							}
+							}break;
+					
 					case 34: {
 						st.append((char)ch);
 						ch = r.read();
@@ -318,7 +367,7 @@ public class Scanner {
 						default:{
 							if(Character.isDigit(ch))
 							{
-							ch = r.read();
+							//ch = r.read();
 							if (ch == 0)
 							{
 								t = new Token(INTLIT, "0", pos, line);
@@ -327,97 +376,116 @@ public class Scanner {
 							{
 								while(Character.isDigit(ch))
 								{
-									st.append(ch);
+									r.mark(Integer.MAX_VALUE);
+									st.append((char)ch);
 									ch = r.read();
-								}
+									t = new Token(INTLIT, st.toString(), pos-st.length(), line);
+								}r.reset();
 							}
 						}
 							else if(Character.isJavaIdentifierStart(ch) && ch != 36 && ch != 95)
 						{
-						st.append(ch);
+						st.append((char)ch);
+						r.mark(Integer.MAX_VALUE);
 						ch = r.read();
 						
 							while(Character.isJavaIdentifierPart(ch) || Character.isDigit(ch) || ch == 36 || ch == 95){
-								st.append(ch);
+								r.mark(Integer.MAX_VALUE);
+								st.append((char)ch);
 								ch = r.read();
 							}
-						if(st.toString().equals("and")) {
-							t = new Token(KW_and, st.toString(), pos-st.length(), line); 
+							r.reset(); 
+							t = new Token(NAME, st.toString(), pos-st.length(), line); 
+							t = checkInkeywords(t,st);
 						}
-						else if (st.toString().equals("break")) {
-							t = new Token(KW_break, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("do")) {
-							t = new Token(KW_do, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("else")) {
-							t = new Token(KW_else, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("elseif")) {
-							t = new Token(KW_elseif, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("end")) {
-							t = new Token(KW_end, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("false")) {
-							t = new Token(KW_false, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("for")) {
-							t = new Token(KW_for, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("function")) {
-							t = new Token(KW_function, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("goto")) {
-							t = new Token(KW_goto, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("if")) {
-							t = new Token(KW_if, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("in")) {
-							t = new Token(KW_in, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("local")) {
-							t = new Token(KW_local, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("nil")) {
-							t = new Token(KW_nil, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("not")) {
-							t = new Token(KW_not, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("or")) {
-							t = new Token(KW_or, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("repeat")) {
-							t = new Token(KW_repeat, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("return")) {
-							t = new Token(KW_return, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("then")) {
-							t = new Token(KW_then, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("true")) {
-							t = new Token(KW_true, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("until")) {
-							t = new Token(KW_until, st.toString(), pos-st.length(), line); 
-						}
-						else if (st.toString().equals("while")) {
-							t = new Token(KW_while, st.toString(), pos-st.length(), line); 
-						}
-						}else {
-							throw new LexicalException("Invalid tokens found");
-						}
+							else{
+								throw new LexicalException("Invalid characters found");
+								}
 			}
 						
-		    if (r.read() == -1) { return new Token(EOF,"eof",0,0);}
-			throw new LexicalException("Useful error message");
+		    //if (r.read() == -1) { return new Token(EOF,"eof",0,0);}
+			//throw new LexicalException("Useful error message");
 		
 	}
 
 }
 			}}
-		return t;}}
+		return t;}
+	
+private Token checkInkeywords(Token t,StringBuilder st) {
+	if(st.toString().equals("and")) {
+		t = new Token(KW_and, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("break")) {
+		t = new Token(KW_break, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("do")) {
+		t = new Token(KW_do, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("else")) {
+		t = new Token(KW_else, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("elseif")) {
+		t = new Token(KW_elseif, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("end")) {
+		t = new Token(KW_end, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("false")) {
+		t = new Token(KW_false, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("for")) {
+		t = new Token(KW_for, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("function")) {
+		t = new Token(KW_function, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("goto")) {
+		t = new Token(KW_goto, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("if")) {
+		t = new Token(KW_if, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("in")) {
+		t = new Token(KW_in, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("local")) {
+		t = new Token(KW_local, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("nil")) {
+		t = new Token(KW_nil, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("not")) {
+		t = new Token(KW_not, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("or")) {
+		t = new Token(KW_or, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("repeat")) {
+		t = new Token(KW_repeat, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("return")) {
+		t = new Token(KW_return, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("then")) {
+		t = new Token(KW_then, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("true")) {
+		t = new Token(KW_true, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("until")) {
+		t = new Token(KW_until, st.toString(), pos-st.length(), line); 
+	}
+	else if (st.toString().equals("while")) {
+		t = new Token(KW_while, st.toString(), pos-st.length(), line); 
+	
+	}/*else {
+		t = new Token(NAME, st.toString(), pos-st.length(), line); 
+		//throw new LexicalException("Invalid tokens found");
+	}*/
+	
+	
+	return t;
+}
+}
 			
